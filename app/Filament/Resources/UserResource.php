@@ -2,18 +2,42 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Resources\UserResource\Pages;
-use App\Filament\Resources\UserResource\RelationManagers;
-use App\Models\User;
 use Filament\Forms;
-use Filament\Forms\Components\Grid;
-use Filament\Forms\Form;
-use Filament\Resources\Resource;
+use App\Models\User;
 use Filament\Tables;
-use Filament\Tables\Columns\ViewColumn;
+use Filament\Forms\Form;
+use App\Mail\SetPassword;
 use Filament\Tables\Table;
+use Filament\Facades\Filament;
+use Filament\Resources\Resource;
+use Filament\Forms\Components\Grid;
+use Illuminate\Support\Facades\Mail;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Section;
+use Filament\Forms\Components\Textarea;
+use Filament\Tables\Actions\EditAction;
+use Filament\Tables\Actions\ViewAction;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\ViewColumn;
+use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
+use Illuminate\Support\Facades\Password;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\FileUpload;
+use Filament\Tables\Actions\DeleteAction;
 use Illuminate\Database\Eloquent\Builder;
+use Filament\Tables\Actions\BulkActionGroup;
+use Filament\Tables\Actions\DeleteBulkAction;
+use App\Filament\Resources\UserResource\Pages;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Filament\Tables\Actions\Action;
+use App\Filament\Resources\UserResource\Pages\EditUser;
+use App\Filament\Resources\UserResource\Pages\ListUsers;
+use App\Filament\Resources\UserResource\Pages\CreateUser;
+use App\Filament\Resources\UserResource\RelationManagers;
+use Filament\Tables\Actions\ForceDeleteAction;
+use Filament\Tables\Actions\ForceDeleteBulkAction;
+use Filament\Tables\Actions\RestoreAction;
 
 class UserResource extends Resource
 {
@@ -25,34 +49,34 @@ class UserResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\Section::make('Personal Information')->schema([
+                Section::make('Personal Information')->schema([
                     Grid::make(2)->schema([
-                        Forms\Components\FileUpload::make('profile_image')
+                        FileUpload::make('profile_image')
                             ->label('Profile Photo')
                             ->image()  // Restrict to image files
                             ->directory('profile-photos')  // Directory to store images
                             ->maxSize(2048)  // Limit size to 2MB
                             ->required(false)
                             ->helperText('Upload a profile picture (Max 2MB).'),
-                        Forms\Components\TextInput::make('first_name')
+                        TextInput::make('first_name')
                             ->required()
                             ->maxLength(191)
                             ->label('First Name')
                             ->placeholder('Enter your first name'),
-                        Forms\Components\TextInput::make('last_name')
+                        TextInput::make('last_name')
                             ->required()
                             ->maxLength(191)
                             ->label('Last Name')
                             ->placeholder('Enter your last name'),
-                        Forms\Components\TextInput::make('public_name')
+                        TextInput::make('public_name')
                             ->required()
                             ->maxLength(191)
                             ->label('Public Name')
                             ->placeholder('Enter your public name'),
-                        Forms\Components\DatePicker::make('date_of_birth')
+                        DatePicker::make('date_of_birth')
                             ->required()
                             ->label('Date of Birth'),
-                        Forms\Components\Select::make('gender')
+                        Select::make('gender')
                             ->required()
                             ->options([
                                 1 => 'Male',
@@ -62,15 +86,15 @@ class UserResource extends Resource
                             ->label('Gender'),
                     ]),
                 ]),
-                Forms\Components\Section::make('Contact Information')->schema([
+                Section::make('Contact Information')->schema([
                     Grid::make(2)->schema([
-                        Forms\Components\TextInput::make('email')
+                        TextInput::make('email')
                             ->email()
                             ->required()
                             ->maxLength(191)
                             ->label('Email Address')
                             ->placeholder('Enter your email address'),
-                        Forms\Components\TextInput::make('phone_number')
+                        TextInput::make('phone_number')
                             ->nullable()
                             ->label('Phone Number')
                             ->required()
@@ -78,7 +102,7 @@ class UserResource extends Resource
                     ]),
 
                     Grid::make(1)->schema([
-                        Forms\Components\Textarea::make('address')
+                        Textarea::make('address')
                             ->required()
                             ->columnSpanFull()
                             ->label('Address')
@@ -92,10 +116,15 @@ class UserResource extends Resource
     {
         return $table
             ->columns([
-                ViewColumn::make('user')->view('tables.columns.user-data'),
-                Tables\Columns\TextColumn::make('public_name')
+                ViewColumn::make('user')->view('tables.columns.user-data')->searchable(query: function (Builder $query, string $search): Builder {
+                    return $query
+                        ->orWhere('first_name', 'like', "%{$search}%")
+                        ->orWhere('last_name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%");
+                }),
+                TextColumn::make('public_name')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('password')
+                TextColumn::make('password')
                     ->label('Is Password Set')
                     ->default('No')
                     ->formatStateUsing(function ($record) {
@@ -108,10 +137,10 @@ class UserResource extends Resource
                         'danger' => 'No',    // Red badge for "No"
                     ])
                     ->sortable(),
-                Tables\Columns\TextColumn::make('date_of_birth')
+                TextColumn::make('date_of_birth')
                     ->date()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('gender')
+                TextColumn::make('gender')
                     ->numeric()
                     ->sortable()
                     ->badge()
@@ -124,17 +153,38 @@ class UserResource extends Resource
                     }),
             ])
             ->filters([
-                //
+                Tables\Filters\TrashedFilter::make(),
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
+                Action::make('resend-password')->requiresConfirmation()->label('Resend Password')->action(function (User $record) {
+                    $token = Password::broker()->createToken($record);
+
+                    // Need to change for UserPanel
+                    $url = Filament::getResetPasswordUrl($token, $record);
+                    Mail::to($record->email)->send(new SetPassword($url));
+
+                    Notification::make()
+                        ->title(__('Mail Sent!'))
+                        ->body(__('Mail has been sent to :email', ['email' => $record->email]))
+                        ->success()
+                        ->send();
+                })->iconButton()->icon('heroicon-o-paper-airplane')->tooltip('Resend Password'),
+                ViewAction::make()->iconButton()->icon('heroicon-o-eye')->tooltip('View'),
+                EditAction::make()->iconButton()->icon('heroicon-o-pencil')->tooltip('Edit'),
+                DeleteAction::make()->iconButton()->icon('heroicon-o-trash')->requiresConfirmation()->label('Delete')->tooltip('Delete'),
+                RestoreAction::make()->iconButton()->icon('heroicon-o-arrow-path')->tooltip('Restore'),
+                ForceDeleteAction::make()->iconButton()->icon('heroicon-o-trash')->requiresConfirmation()->label('Force Delete')->tooltip('Force Delete'),
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
+                    ForceDeleteBulkAction::make(),
                 ]),
             ])->modifyQueryUsing(function (Builder $query): Builder {
-                return $query->whereNot('id', 1);
+                // Exclude the user with ID 1
+                $query->whereNot('id', 1);
+
+                return $query;
             });
     }
 
@@ -148,9 +198,9 @@ class UserResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListUsers::route('/'),
-            'create' => Pages\CreateUser::route('/create'),
-            'edit' => Pages\EditUser::route('/{record}/edit'),
+            'index' => ListUsers::route('/'),
+            'create' => CreateUser::route('/create'),
+            'edit' => EditUser::route('/{record}/edit'),
         ];
     }
 }

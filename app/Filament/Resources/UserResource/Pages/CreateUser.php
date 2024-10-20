@@ -2,10 +2,15 @@
 
 namespace App\Filament\Resources\UserResource\Pages;
 
-use App\Filament\Resources\UserResource;
 use Filament\Actions;
-use Filament\Resources\Pages\CreateRecord;
+use App\Mail\SetPassword;
+use Filament\Facades\Filament;
+use Illuminate\Support\Facades\Mail;
+use App\Filament\Resources\UserResource;
 use Illuminate\Support\Facades\Password;
+use Filament\Resources\Pages\CreateRecord;
+use Filament\Notifications\Auth\ResetPassword as ResetPasswordNotification;
+
 
 class CreateUser extends CreateRecord
 {
@@ -13,13 +18,11 @@ class CreateUser extends CreateRecord
 
     public function afterCreate(): void
     {
-        $records = $this->getRecord();
-        $status = Password::sendResetLink(['email' => $records->email]);
+        $user = $this->getRecord();
+        $token = Password::broker()->createToken($user);
 
-        if ($status === Password::RESET_LINK_SENT) {
-            session()->flash('success', __('Password reset link sent on registered email.'));
-        } else {
-            session()->flash('error', __('Unable to send password reset link.'));
-        }
+        // Need to change for UserPanel
+        $url = Filament::getResetPasswordUrl($token, $user);
+        Mail::to($user->email)->send(new SetPassword($url));
     }
 }
