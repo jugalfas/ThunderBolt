@@ -5,28 +5,24 @@ namespace App\Filament\Resources\UserResource\Pages;
 use Filament\Actions;
 use Filament\Forms\Form;
 use Filament\Forms\Components\Grid;
-use Filament\Forms\Components\Tabs;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Tabs\Tab;
+use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Textarea;
 use App\Filament\Resources\UserResource;
-use App\Models\SubscriptionPlan;
 use Filament\Forms\Components\TextInput;
-use Filament\Resources\Pages\EditRecord;
+use Filament\Resources\Pages\ViewRecord;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
-use Filament\Tables\Actions\DeleteAction;
+use Filament\Forms\Components\Html;
+use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
+use Filament\Forms\Components\Tabs;
+use Filament\Forms\Components\Tabs\Tab;
 
-class EditUser extends EditRecord
+class ViewUser extends ViewRecord
 {
     protected static string $resource = UserResource::class;
 
-    protected function getHeaderActions(): array
-    {
-        return [
-            Actions\DeleteAction::make(),
-        ];
-    }
+    protected static string $view = 'filament.resources.user-resource.pages.view-user';
 
     public function form(Form $form): Form
     {
@@ -34,9 +30,6 @@ class EditUser extends EditRecord
             ->schema([
                 Tabs::make('Profile')->schema([
                     Tab::make('User Information')->schema([
-                        Grid::make(1)->schema([
-                            FileUpload::make('profile_image')->avatar()->directory('profile-images'),
-                        ]),
                         Grid::make(3)->schema([
                             TextInput::make('first_name')
                                 ->required()
@@ -89,12 +82,6 @@ class EditUser extends EditRecord
                                 ->placeholder('Enter your address'),
                         ]),
                     ]),
-                    Tab::make('Subscriptions')->schema([
-                        Select::make('subscription_plan_id')
-                            ->required()
-                            ->label('Subscription Plan')
-                            ->options(SubscriptionPlan::all()->pluck('name', 'id'))
-                    ])
                 ])->columnSpanFull()
             ]);
     }

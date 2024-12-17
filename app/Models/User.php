@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Spatie\MediaLibrary\HasMedia;
 
 class User extends Authenticatable implements HasName
 {
@@ -79,5 +80,14 @@ class User extends Authenticatable implements HasName
     public function posts()
     {
         return $this->hasMany(Post::class, 'author_id');
+    }
+    public function subscription()
+    {
+        return $this->hasOne(Subscription::class);
+    }
+
+    public function scopeWithFullName($query)
+    {
+        return $query->selectRaw('CONCAT(first_name, " ", last_name) as full_name, id');
     }
 }

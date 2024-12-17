@@ -11,6 +11,7 @@ use Filament\Tables\Table;
 use Filament\Facades\Filament;
 use Filament\Resources\Resource;
 use Filament\Forms\Components\Grid;
+use Filament\Tables\Actions\Action;
 use Illuminate\Support\Facades\Mail;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Section;
@@ -26,18 +27,19 @@ use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Tables\Actions\DeleteAction;
 use Illuminate\Database\Eloquent\Builder;
+use Filament\Tables\Actions\RestoreAction;
+use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Actions\BulkActionGroup;
 use Filament\Tables\Actions\DeleteBulkAction;
 use App\Filament\Resources\UserResource\Pages;
+use Filament\Tables\Actions\ForceDeleteAction;
+use Filament\Tables\Actions\ForceDeleteBulkAction;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
-use Filament\Tables\Actions\Action;
 use App\Filament\Resources\UserResource\Pages\EditUser;
+use App\Filament\Resources\UserResource\Pages\ViewUser;
 use App\Filament\Resources\UserResource\Pages\ListUsers;
 use App\Filament\Resources\UserResource\Pages\CreateUser;
 use App\Filament\Resources\UserResource\RelationManagers;
-use Filament\Tables\Actions\ForceDeleteAction;
-use Filament\Tables\Actions\ForceDeleteBulkAction;
-use Filament\Tables\Actions\RestoreAction;
 
 class UserResource extends Resource
 {
@@ -57,7 +59,8 @@ class UserResource extends Resource
                             ->directory('profile-photos')  // Directory to store images
                             ->maxSize(2048)  // Limit size to 2MB
                             ->required(false)
-                            ->helperText('Upload a profile picture (Max 2MB).'),
+                            ->helperText('Upload a profile picture (Max 2MB).')
+                            ->disabled(fn($livewire) => $livewire instanceof ViewRecord),
                         TextInput::make('first_name')
                             ->required()
                             ->maxLength(191)
@@ -168,7 +171,9 @@ class UserResource extends Resource
                         ->body(__('Mail has been sent to :email', ['email' => $record->email]))
                         ->success()
                         ->send();
-                })->iconButton()->icon('heroicon-o-paper-airplane')->tooltip('Resend Password'),
+                })->iconButton()->icon('heroicon-o-paper-airplane')->tooltip('Resend Password')->visible(function (User $record) {
+                    return $record->password == null;
+                }),
                 ViewAction::make()->iconButton()->icon('heroicon-o-eye')->tooltip('View'),
                 EditAction::make()->iconButton()->icon('heroicon-o-pencil')->tooltip('Edit'),
                 DeleteAction::make()->iconButton()->icon('heroicon-o-trash')->requiresConfirmation()->label('Delete')->tooltip('Delete'),
@@ -201,6 +206,7 @@ class UserResource extends Resource
             'index' => ListUsers::route('/'),
             'create' => CreateUser::route('/create'),
             'edit' => EditUser::route('/{record}/edit'),
+            'view' => ViewUser::route('/{record}'),
         ];
     }
 }
