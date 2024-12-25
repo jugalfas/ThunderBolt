@@ -1,25 +1,27 @@
 <?php
 
-use App\Mail\SetPassword;
-use App\Mail\TestEmail;
-use App\Models\User;
-use Filament\Facades\Filament;
-use Illuminate\Support\Facades\Mail;
+use App\Http\Controllers\ProfileController;
+use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
 
 Route::get('/', function () {
-    return view('welcome');
+    return Inertia::render('Welcome', [
+        'canLogin' => Route::has('login'),
+        'canRegister' => Route::has('register'),
+        'laravelVersion' => Application::VERSION,
+        'phpVersion' => PHP_VERSION,
+    ]);
 });
 
-Route::get('/send-test-email', function () {
-    $toEmail = 'test@example.com';  // Replace with the email address you want to send to
+Route::get('/dashboard', function () {
+    return Inertia::render('Dashboard');
+})->middleware(['auth', 'verified'])->name('dashboard');
 
-    $user = User::find(2);
-    $token = Password::broker()->createToken($user);
-
-
-    $url = Filament::getResetPasswordUrl($token, $user);
-    Mail::to($toEmail)->send(new SetPassword($url));
-
-    return 'Test email sent successfully!';
+Route::middleware('auth')->group(function () {
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
+
+require __DIR__.'/auth.php';
