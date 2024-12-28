@@ -14,7 +14,7 @@ return [
     |
     */
     'auth' => [
-        'guard' => env('FILAMENT_AUTH_GUARD', 'web'),
+        'guard' => 'admin',
         'user_model' => App\Models\User::class,  // Customize the User Model
     ],
 

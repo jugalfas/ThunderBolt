@@ -9,10 +9,11 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\MediaLibrary\HasMedia;
+use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable implements HasName
 {
-    use HasFactory, Notifiable, SoftDeletes, CanResetPassword;
+    use HasFactory, Notifiable, SoftDeletes, CanResetPassword, HasRoles;
 
     /**
      * The attributes that are mass assignable.
