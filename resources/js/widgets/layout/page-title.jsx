@@ -16,7 +16,7 @@ export function PageTitle({ section, heading, children }) {
 }
 
 PageTitle.propTypes = {
-  section: PropTypes.string.isRequired,
+  section: PropTypes.string,
   heading: PropTypes.string.isRequired,
   children: PropTypes.node.isRequired,
 };

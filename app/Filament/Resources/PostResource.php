@@ -103,14 +103,14 @@ class PostResource extends Resource
                 // Section for Additional Information
                 Section::make('Additional Information')->schema([
                     Grid::make(2)->schema([
-                        Forms\Components\Select::make('category_id')
+                        Forms\Components\Select::make('category_ids')
                             ->label('Category')
                             ->relationship('categories', 'name') // Assuming you have a Category model
                             ->required()
                             ->multiple()
                             ->placeholder('Select a category'),
 
-                        Forms\Components\Select::make('tags')
+                        Forms\Components\Select::make('tag_ids')
                             ->label('Tags')
                             ->relationship('tags', 'name')
                             ->required()
@@ -164,28 +164,26 @@ class PostResource extends Resource
                     ->sortable(),
                 Tables\Columns\TextColumn::make('category_ids')
                     ->label('Category')
-                    ->getStateUsing(function ($record) {
-                        // Assuming tags are stored as an array in the database
-                        return Category::whereIn('id', json_decode($record->category_ids))
-                            ->pluck('name')
-                            ->implode(', ');
-                    })
                     ->sortable()
+                    ->getStateUsing(function ($record) {
+                        return $record->categories->pluck('name')->implode(', ');
+                    })
                     ->toggleable(),
                 TextColumn::make('tag_ids')
                     ->label('Tags')
                     ->searchable()
                     ->getStateUsing(function ($record) {
                         // Assuming tags are stored as an array in the database
-                        return Tag::whereIn('id', json_decode($record->tag_ids))
-                            ->pluck('name')
-                            ->implode(', ');
+                        return $record->tags->pluck('name')->implode(', ');
                     })
                     ->toggleable(),
                 Tables\Columns\TextColumn::make('status'),
                 Tables\Columns\TextColumn::make('published_at')
                     ->dateTime()
-                    ->sortable(),
+                    ->sortable()
+                    ->getStateUsing(function ($record) {
+                        return $record->published_at ? $record->published_at->diffForHumans() : $record->created_at->diffForHumans();
+                    }),
             ])
             ->filters([
                 Tables\Filters\TrashedFilter::make(),
