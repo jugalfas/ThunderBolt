@@ -1,4 +1,4 @@
-import { Head, Link } from "@inertiajs/react";
+import { Head, Link, usePage } from "@inertiajs/react";
 import {
     Card,
     CardBody,
@@ -18,32 +18,32 @@ import React from "react";
 import "../../css/tailwind.min.css";
 
 export default function Home() {
+    const site_name = import.meta.env.VITE_APP_NAME;
     return (
         <>
             <Head title="Home" />
-            <Navbar />
+            <div className="container absolute left-2/4 z-10 mx-auto -translate-x-2/4 p-4">
+                <Navbar />
+            </div>
             <div className="relative flex h-screen content-center items-center justify-center pt-16 pb-32">
                 <div className="absolute top-0 h-full w-full bg-[url('/images/background-3.png')] bg-cover bg-center" />
                 <div className="absolute top-0 h-full w-full bg-black/60 bg-cover bg-center" />
                 <div className="max-w-8xl container relative mx-auto">
                     <div className="flex flex-wrap items-center">
-                        <div className="ml-auto mr-auto w-full px-4 text-center lg:w-8/12">
+                        <div className="ml-auto mr-auto w-full px-4 text-center">
                             <Typography
                                 variant="h1"
                                 color="white"
                                 className="mb-6 font-black"
                             >
-                                Your story starts with us.
+                                Stay Motivated, Stay Focused, Stay Unstoppable.
                             </Typography>
                             <Typography
                                 variant="lead"
                                 color="white"
                                 className="opacity-80"
                             >
-                                This is a simple example of a Landing Page you
-                                can build using Material Tailwind. It features
-                                multiple components based on the Tailwind CSS
-                                and Material Design by Google.
+                                Welcome to {site_name}, your ultimate destination for personal growth and motivation. Whether you're looking to improve your mindset, boost your productivity, or stay motivated through life’s challenges, we’re here to guide you every step of the way. Our practical tips, inspirational stories, and actionable advice will help you unlock your full potential and achieve success, no matter where you are in the world. Start your transformation today!
                             </Typography>
                         </div>
                     </div>
@@ -51,21 +51,6 @@ export default function Home() {
             </div>
             <section className="-mt-32 bg-white px-4 pb-20 pt-4">
                 <div className="container mx-auto">
-                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                        {featuresData.map(
-                            ({ color, title, icon, description }) => (
-                                <FeatureCard
-                                    key={title}
-                                    color={color}
-                                    title={title}
-                                    icon={React.createElement(icon, {
-                                        className: "w-5 h-5 text-white",
-                                    })}
-                                    description={description}
-                                />
-                            )
-                        )}
-                    </div>
                     <div className="mt-32 flex flex-wrap items-center">
                         <div className="mx-auto -mt-8 w-full px-4 md:w-5/12">
                             <div className="mb-6 inline-flex h-16 w-16 items-center justify-center rounded-full bg-blue-gray-900 p-2 text-center shadow-lg">
@@ -76,20 +61,12 @@ export default function Home() {
                                 className="mb-3 font-bold"
                                 color="blue-gray"
                             >
-                                Working with us is a pleasure
+                                Our Mission
                             </Typography>
                             <Typography className="mb-8 font-normal text-blue-gray-500">
-                                Don't let your uses guess by attaching tooltips
-                                and popoves to any element. Just make sure you
-                                enable them first via JavaScript.
-                                <br />
-                                <br />
-                                The kit comes with three pre-built pages to help
-                                you get started faster. You can change the text
-                                and images and you're good to go. Just make sure
-                                you enable them first via JavaScript.
+                                At {site_name}, we’re passionate about helping individuals cultivate the right mindset and habits to achieve success. Whether you're working towards personal growth, productivity, or overcoming challenges, our mission is to guide you to a better, more fulfilling life.
                             </Typography>
-                            <Button variant="filled">read more</Button>
+                            {/* <Button variant="filled">read more</Button> */}
                         </div>
                         <div className="mx-auto mt-24 flex w-full justify-center px-4 md:w-4/12 lg:mt-0">
                             <Card className="shadow-lg border shadow-gray-500/10 rounded-lg">
@@ -99,7 +76,7 @@ export default function Home() {
                                 >
                                     <img
                                         alt="Card Image"
-                                        src="/images/teamwork.png"
+                                        src="/images/motivation.webp"
                                         className="h-full w-full"
                                     />
                                 </CardHeader>

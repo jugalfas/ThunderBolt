@@ -36,15 +36,14 @@ class Post extends Model
         return $this->belongsTo(User::class, 'user_id'); // Fixing the foreign key reference
     }
 
-    public function category()
+    public function categories()
     {
-        return $this->belongsTo(Category::class, 'category_id'); // Optional category relationship
+        return $this->belongsToMany(Category::class);
     }
 
-    // Optionally, add a method for tags (if using a separate table)
-    public function tagList()
+    public function tags()
     {
-        return explode(',', $this->tags); // Assuming tags are stored as a comma-separated string
+        return $this->belongsToMany(Tag::class);
     }
 
     public static function booting()
@@ -53,4 +52,5 @@ class Post extends Model
             $model->user_id = Auth::user()->id;
         });
     }
+
 }

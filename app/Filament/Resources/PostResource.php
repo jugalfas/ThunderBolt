@@ -38,6 +38,9 @@ use App\Filament\Resources\PostResource\Pages\EditPost;
 use App\Filament\Resources\PostResource\Pages\ListPosts;
 use App\Filament\Resources\PostResource\Pages\CreatePost;
 use App\Filament\Resources\PostResource\RelationManagers;
+use App\Models\Category;
+use App\Models\Tag;
+use Filament\Forms\Components\RichEditor;
 use Filament\Tables\Columns\ViewColumn;
 
 class PostResource extends Resource
@@ -74,7 +77,7 @@ class PostResource extends Resource
                             ->placeholder('Enter a URL-friendly slug'),
                     ]),
 
-                    Forms\Components\Textarea::make('content')
+                    Forms\Components\RichEditor::make('content')
                         ->required()
                         ->columnSpanFull()
                         ->label('Content')
@@ -102,14 +105,17 @@ class PostResource extends Resource
                     Grid::make(2)->schema([
                         Forms\Components\Select::make('category_id')
                             ->label('Category')
-                            ->relationship('category', 'name') // Assuming you have a Category model
+                            ->relationship('categories', 'name') // Assuming you have a Category model
                             ->required()
+                            ->multiple()
                             ->placeholder('Select a category'),
 
-                        Forms\Components\TextInput::make('tags')
-                            ->maxLength(191)
+                        Forms\Components\Select::make('tags')
                             ->label('Tags')
-                            ->placeholder('Add tags, separated by commas'),
+                            ->relationship('tags', 'name')
+                            ->required()
+                            ->multiple()
+                            ->placeholder('Select a tags'),
                     ]),
 
                     Grid::make(2)->schema([
@@ -156,13 +162,26 @@ class PostResource extends Resource
                     ->label('Author')
                     ->numeric()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('category.name')
+                Tables\Columns\TextColumn::make('category_ids')
                     ->label('Category')
-                    ->numeric()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('tags')
+                    ->getStateUsing(function ($record) {
+                        // Assuming tags are stored as an array in the database
+                        return Category::whereIn('id', json_decode($record->category_ids))
+                            ->pluck('name')
+                            ->implode(', ');
+                    })
+                    ->sortable()
+                    ->toggleable(),
+                TextColumn::make('tag_ids')
+                    ->label('Tags')
                     ->searchable()
-                    ->default('-'),
+                    ->getStateUsing(function ($record) {
+                        // Assuming tags are stored as an array in the database
+                        return Tag::whereIn('id', json_decode($record->tag_ids))
+                            ->pluck('name')
+                            ->implode(', ');
+                    })
+                    ->toggleable(),
                 Tables\Columns\TextColumn::make('status'),
                 Tables\Columns\TextColumn::make('published_at')
                     ->dateTime()
