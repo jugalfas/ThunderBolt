@@ -19,4 +19,16 @@ class HomeController extends Controller
             'posts' => $posts
         ]);
     }
+
+    public function blog()
+    {
+        $posts = Post::latest()->get();
+        $posts->transform(function ($post) {
+            $post->featured_image = asset('storage/' . $post->featured_image);
+            return $post;
+        });
+        return Inertia::render('Blog', [
+            'posts' => $posts
+        ]);
+    }
 }

@@ -10,7 +10,7 @@ import {
 } from "@material-tailwind/react";
 import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
 
-export function Navbar({ brandName = "ThunderBolt", action }) {
+export function Navbar({ brandName = "ThunderBolt", className = "text-white" }) {
     const [openNav, setOpenNav] = React.useState(false);
     const user = usePage().props.auth.user;
 
@@ -32,26 +32,33 @@ export function Navbar({ brandName = "ThunderBolt", action }) {
             >
                 <Link
                     href="/"
-                    className="flex items-center gap-1 p-1 font-bold"
+                    className={"flex items-center gap-1 p-1 font-bold " + className}
                 >
                     Home
+                </Link>
+            </Typography>
+            <Typography
+                key="home"
+                as="li"
+                variant="small"
+                color="inherit"
+                className="capitalize"
+            >
+                <Link
+                    href="/blog"
+                    className={"flex items-center gap-1 p-1 font-bold " + className}
+                >
+                    Blog
                 </Link>
             </Typography>
         </ul>
     );
 
-    // Ensure 'action' is a valid React element or provide a fallback
-    const actionElement = action
-        ? React.cloneElement(action, {
-              className: "hidden lg:inline-block",
-          })
-        : null;
-
     return (
         <MTNavbar color="transparent" className="p-3">
             <div className="container mx-auto flex items-center justify-between text-white">
                 <Link to="/">
-                    <Typography className="mr-4 ml-2 cursor-pointer py-1.5 font-bold">
+                    <Typography className={"mr-4 ml-2 cursor-pointer py-1.5 font-bold " + className}>
                         {brandName}
                     </Typography>
                 </Link>
@@ -60,7 +67,7 @@ export function Navbar({ brandName = "ThunderBolt", action }) {
                     variant="text"
                     size="sm"
                     color="white"
-                    className="text-inherit hover:bg-transparent focus:bg-transparent active:bg-transparent "
+                    className={"text-inherit hover:bg-transparent focus:bg-transparent active:bg-transparent " + className}
                     onClick={() => setOpenNav(!openNav)}
                 >
                     {openNav ? (
@@ -71,7 +78,7 @@ export function Navbar({ brandName = "ThunderBolt", action }) {
                 </IconButton>
             </div>
             <MobileNav
-                className="block w-1/4 basis-full overflow-hidden rounded-xl bg-white px-4 pt-2 pb-4 text-blue-gray-900 absolute right-0"
+                className="block w-1/4 basis-full overflow-hidden rounded-xl bg-white px-4 pt-2 pb-4 text-blue-gray-900 absolute right-0 border"
                 open={openNav}
             >
                 <div className="container mx-auto">
@@ -82,7 +89,7 @@ export function Navbar({ brandName = "ThunderBolt", action }) {
                                 as="li"
                                 variant="small"
                                 color="inherit"
-                                className="capitalize"
+                                className="capitalize hover:bg-gray-100"
                             >
                                 <span className="flex items-center gap-1 p-1 font-bold">
                                     {user.first_name} {user.last_name}
@@ -93,7 +100,7 @@ export function Navbar({ brandName = "ThunderBolt", action }) {
                                 as="li"
                                 variant="small"
                                 color="inherit"
-                                className="capitalize"
+                                className="capitalize hover:bg-gray-100"
                             >
                                 <Link
                                     href="/profile"
@@ -107,7 +114,7 @@ export function Navbar({ brandName = "ThunderBolt", action }) {
                                 as="li"
                                 variant="small"
                                 color="inherit"
-                                className="capitalize"
+                                className="capitalize hover:bg-gray-100"
                             >
                                 <Link
                                     href={route("logout")} // Use Laravel's route helper if available
@@ -126,7 +133,7 @@ export function Navbar({ brandName = "ThunderBolt", action }) {
                                 as="li"
                                 variant="small"
                                 color="inherit"
-                                className="capitalize"
+                                className="capitalize hover:bg-gray-100"
                             >
                                 <Link
                                     href="/login"
@@ -140,7 +147,7 @@ export function Navbar({ brandName = "ThunderBolt", action }) {
                                 as="li"
                                 variant="small"
                                 color="inherit"
-                                className="capitalize"
+                                className="capitalize hover:bg-gray-100"
                             >
                                 <Link
                                     href="/register"
